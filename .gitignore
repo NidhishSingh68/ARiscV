@@ -1,0 +1,6 @@
+impl/
+test/obj_dir/
+test/wave.vcd
+test/*.fst
+*.user
+src/gowin_sp/*
