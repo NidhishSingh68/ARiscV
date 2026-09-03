@@ -1,14 +1,14 @@
 // Wire dv is pulsed for a single clock cycle to indicate data valid
 module memory (
   input clk, // clock
-  input[11:0] address, // Read Address
+  input[13:0] address, // Read Address
   input rdstrb, // Pulsed by user to start read operation
-  output [31:0] data, // Output data
+  output [7:0] data, // Output data
   output reg dv // data line is valid
 );
 
 reg oce,ce,reset,wre;
-reg [31:0] din;
+reg [7:0] din;
 
 Gowin_SP instruction_ram(
     .dout(data), //output [31:0] dout
@@ -27,13 +27,10 @@ localparam OUTPUT = 2;
 
 reg[1:0] curr_state = IDLE;
 reg[1:0] next_state = IDLE;
-reg [11:0] local_add; // Cache the address
-
-reg cycle_count = 0;
+reg [13:0] local_add; // Cache the address
 
 always @(posedge clk) begin
   case (curr_state)
-
     IDLE: begin
       if (rdstrb) begin
         local_add <= address;
@@ -41,10 +38,7 @@ always @(posedge clk) begin
       end else curr_state <= IDLE;
     end
     READ_WAIT: begin
-      if (cycle_count) begin 
-        curr_state <= OUTPUT;
-      end else curr_state <= READ_WAIT;
-      cycle_count <= !cycle_count;
+      curr_state <= OUTPUT;
     end
     OUTPUT: begin
       if (rdstrb) begin

@@ -4,3 +4,5 @@ test/wave.vcd
 test/*.fst
 *.user
 src/gowin_sp/*
+src/ram_test.sdc
+./ram_test.gprj

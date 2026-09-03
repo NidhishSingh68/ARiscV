@@ -31,7 +31,7 @@ module uart_tx
   reg [$clog2(CYCLES_PER_BIT)-1:0] curr_cycle = 0; // Keeps track of cycles elapsed in current state 
   
   always @(*) begin
-    if (reset) begin
+    if (!reset) begin
       tx_done = 'b0;
       data_out = UARTIDLE;
       next_state = IDLE;
@@ -47,7 +47,7 @@ module uart_tx
         START_BIT: begin
           tx_done = 'b0;
           data_out = 'b0;
-          if (curr_cycle == CYCLES_PER_BIT - 1)
+          if (curr_cycle == CYCLES_PER_BIT - 1'b1)
             next_state = DATA_BITS;
           else 
             next_state = START_BIT;
@@ -55,7 +55,7 @@ module uart_tx
         DATA_BITS: begin
           tx_done = 'b0;
           data_out = read_data[curr_bit];
-          if (curr_bit == 7 && curr_cycle == CYCLES_PER_BIT - 1)
+          if (curr_bit == 7 && curr_cycle == CYCLES_PER_BIT - 1'b1)
             next_state = STOP_BIT;
           else 
             next_state = DATA_BITS;
@@ -63,7 +63,7 @@ module uart_tx
         STOP_BIT: begin
           tx_done = 'b0;
           data_out = 'b1;
-          if (curr_cycle == CYCLES_PER_BIT - 1)
+          if (curr_cycle == CYCLES_PER_BIT - 1'b1)
             next_state = DONE;
           else 
             next_state = STOP_BIT;
@@ -83,8 +83,8 @@ module uart_tx
   end
   
   // State Transition Logic
-  always @(posedge clk or posedge reset) begin
-    if (reset) begin
+  always @(posedge clk or negedge reset) begin
+    if (!reset) begin
       curr_state <= IDLE;
     end else begin
       curr_state <= next_state;
@@ -92,8 +92,8 @@ module uart_tx
   end
   
   // Sequential Logic
-  always @( posedge clk or posedge reset ) begin
-    if (reset) begin
+  always @( posedge clk or negedge reset ) begin
+    if (!reset) begin
       curr_cycle <= 0;
       curr_bit <= 0;
     end else begin
@@ -102,31 +102,31 @@ module uart_tx
           if (rstrb) read_data <= data_in;
         end
         START_BIT: begin
-          if (curr_cycle == CYCLES_PER_BIT - 1)
+          if (curr_cycle == CYCLES_PER_BIT - 1'b1)
             curr_cycle <= 0;
           else
-            curr_cycle <= curr_cycle + 1;
+            curr_cycle <= curr_cycle + 1'b1;
         end
         DATA_BITS: begin
           // Update curr_bit every CYCLES_PER_BIT clk cycles uptill 7
-          if (curr_bit == 7 && curr_cycle == CYCLES_PER_BIT - 1) begin
+          if (curr_bit == 'd7 && curr_cycle == CYCLES_PER_BIT - 1'b1) begin
             curr_bit <= 0;
             curr_cycle <= 0;
           end else begin
-            if (curr_cycle == CYCLES_PER_BIT - 1) begin
-              curr_bit <= curr_bit + 1;
+            if (curr_cycle == CYCLES_PER_BIT - 1'b1) begin
+              curr_bit <= curr_bit + 1'b1;
               curr_cycle <= 0;
             end else
-              curr_cycle <= curr_cycle + 1;
+              curr_cycle <= curr_cycle + 1'b1;
             end
         end
         STOP_BIT: begin
-          if (curr_cycle == CYCLES_PER_BIT - 1) curr_cycle <= 0;
-          else curr_cycle <= curr_cycle + 1;
+          if (curr_cycle == CYCLES_PER_BIT - 1'b1) curr_cycle <= 0;
+          else curr_cycle <= curr_cycle + 1'b1;
         end
         default: ;
       endcase
+
     end
   end
-
 endmodule

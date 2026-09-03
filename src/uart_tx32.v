@@ -15,7 +15,7 @@ reg uart_rstrb;
 wire uart_tx_done;
 
 reg[1:0] curr_frame = 0;
-reg [7:0] bytes [0:3];
+reg [7:0] bytes [3:0];
 
 uart_tx uart(
   .clk(clk),
@@ -28,9 +28,10 @@ uart_tx uart(
 
 assign uart_data = bytes[curr_frame];
 
-always @(posedge clk) begin
-  uart_rstrb <= 1'b0;
-  if (rstrb) begin
+always @(posedge clk or negedge reset) begin
+  if (!reset) begin
+    uart_rstrb <= 1'b0;
+  end else if (rstrb) begin
     bytes[0] <= data_in[7:0];
     bytes[1] <= data_in[15:8];
     bytes[2] <= data_in[23:16];
@@ -41,7 +42,7 @@ always @(posedge clk) begin
     if (curr_frame == 3) begin
       curr_frame <= 0;
     end else begin 
-      curr_frame <= curr_frame + 1;
+      curr_frame <= curr_frame + 1'b1;
       uart_rstrb <= 1'b1;
     end
   end

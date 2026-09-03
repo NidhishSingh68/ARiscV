@@ -20,7 +20,7 @@ module tb;
 
     initial begin
         clk = 0;
-        forever #1 clk = ~clk;
+        forever #10 clk = ~clk;
     end
 
     initial begin
@@ -29,8 +29,8 @@ module tb;
         rst = 'b1;
         #100
         rst = 'b0;
-        #10000
-
+        #200000
+        
         $display("Yo can you believe we are done???!!!");
         $finish;
     end

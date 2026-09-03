@@ -11,6 +11,6 @@
         <File path="src/uart_tx.v" type="file.verilog" enable="1"/>
         <File path="src/uart_tx32.v" type="file.verilog" enable="1"/>
         <File path="src/ram_test.cst" type="file.cst" enable="1"/>
-        <File path="src/ram_test.rao" type="file.gao" enable="1"/>
+        <File path="src/ram_test.rao" type="file.gao" enable="0"/>
     </FileList>
 </Project>
