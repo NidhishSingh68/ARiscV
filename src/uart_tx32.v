@@ -41,6 +41,7 @@ always @(posedge clk or negedge reset) begin
   end else if (uart_tx_done) begin
     if (curr_frame == 3) begin
       curr_frame <= 0;
+      uart_rstrb <= 1'b0;
     end else begin 
       curr_frame <= curr_frame + 1'b1;
       uart_rstrb <= 1'b1;

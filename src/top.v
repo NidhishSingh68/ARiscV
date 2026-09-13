@@ -10,14 +10,13 @@ module top
 );
 
 // Uart Signals
-reg[7:0] uart_data_in;
+reg[31:0] uart_data_in;
 
 reg uart_rstrb;
 wire uart_tx_done;
-// Transmits 32 bits instead of 8 in 4 packets
 
-reg [7:0] mem_read_data;
-uart_tx tx(
+reg [31:0] mem_read_data;
+uart_tx32 tx(
   .clk(clk),
   .data_in(uart_data_in),
   .rstrb(uart_rstrb),
@@ -30,15 +29,15 @@ uart_tx tx(
 reg[13:0] mem_address = 0;
 reg mem_rstrb = 1'b0;
 wire dv;
-wire [7:0] mem_out;
-memory ram(
+wire [31:0] mem_out;
+
+instruction_mem ram(
   .clk(clk),
   .address(mem_address),
   .rdstrb(mem_rstrb),
-  .data(mem_out),
+  .instruction(mem_out),
   .dv(dv)
 );
-
 
 localparam READ = 0;
 localparam TRANSMIT = 1;
@@ -47,46 +46,55 @@ reg curr_state = READ;
 reg is_reading = 0;
 reg is_transmitting = 0;
 
-always @(posedge clk) begin
-  case (curr_state)
+always @(posedge clk or negedge rst) begin
 
-    // Read from memory
-    READ: begin
-      if ( !is_reading ) begin
-        is_reading <= 1'b1;
-        mem_rstrb <= 1'b1;
-      end else mem_rstrb <= 1'b0;
-      if (dv) begin
-        curr_state <= TRANSMIT;
-        mem_read_data <= mem_out;
-        mem_address <= mem_address + 1'b1;
-        is_reading <= 0;
-      end 
-    end
+  if (!rst) begin
+    curr_state <= READ;
+    is_reading <= 1'b0;
+    mem_rstrb <= 1'b0;
+    is_transmitting <= 1'b0;
+    uart_rstrb <= 1'b0;
+    mem_address <= 'b0;
+  end else begin
+    case (curr_state)
 
-    // Transmit over uart
-    TRANSMIT: begin
-
-      // Begin Transmission
-      if ( !is_transmitting ) begin
-        uart_rstrb <= 1'b1; 
-        is_transmitting <= 1'b1;
-        uart_data_in <= mem_read_data; 
-      end else begin
-        uart_rstrb <= 1'b0;
+      // Read from memory
+      READ: begin
+        if ( !is_reading ) begin
+          is_reading <= 1'b1;
+          mem_rstrb <= 1'b1;
+        end else mem_rstrb <= 1'b0;
+        if (dv) begin
+          curr_state <= TRANSMIT;
+          mem_read_data <= mem_out;
+          mem_address <= mem_address; // + 3'd4;
+          is_reading <= 0;
+        end 
       end
-      
-      // Wait for Transmission to complete
-      if ( is_transmitting && uart_tx_done ) begin
-          curr_state <= READ;
-          is_transmitting <= 1'b0;
-      end else begin
-        curr_state <= TRANSMIT;
+
+      // Transmit over uart
+      TRANSMIT: begin
+
+        // Begin Transmission
+        if ( !is_transmitting ) begin
+          uart_rstrb <= 1'b1; 
+          is_transmitting <= 1'b1;
+          uart_data_in <= mem_read_data; 
+        end else begin
+          uart_rstrb <= 1'b0;
+        end
+        
+        // Wait for Transmission to complete
+        if ( is_transmitting && uart_tx_done ) begin
+            curr_state <= READ;
+            is_transmitting <= 1'b0;
+        end else begin
+          curr_state <= TRANSMIT;
+        end
+        
       end
-      
-    end
-  endcase
+    endcase
+  end
 end
-
 
 endmodule

@@ -1,7 +1,7 @@
-#File_format=AddrHex
+#File_format=Hex
 #Address_depth=16384
 #Data_width=8
-1:43
-2:6F
-3:64
-4:65
+43
+68
+69
+67
