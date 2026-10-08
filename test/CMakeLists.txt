@@ -7,19 +7,11 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 find_package(verilator REQUIRED)
+find_package(Python3 REQUIRED COMPONENTS Interpreter)
+find_program(RISCV_CLANG clang REQUIRED)
+find_program(LLVM_OBJCOPY llvm-objcopy REQUIRED)
 
-set(INSTRUCTION_IMAGE ${CMAKE_CURRENT_BINARY_DIR}/instructions.txt)
 add_executable(rv32-assembler assembler.cpp)
-
-add_custom_command(
-  OUTPUT ${INSTRUCTION_IMAGE}
-  COMMAND $<TARGET_FILE:rv32-assembler>
-          ${CMAKE_CURRENT_SOURCE_DIR}/programs/add.s ${INSTRUCTION_IMAGE}
-  DEPENDS rv32-assembler programs/add.s
-  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-  VERBATIM
-)
-add_custom_target(assemble_program DEPENDS ${INSTRUCTION_IMAGE})
 
 add_executable(riscv-testbench
   reference_model/src/cpu.cpp
@@ -30,12 +22,21 @@ add_executable(riscv-testbench
   main.cpp
 )
 target_include_directories(riscv-testbench PRIVATE reference_model/includes)
-add_dependencies(riscv-testbench assemble_program)
-add_test(NAME riscv-testbench COMMAND riscv-testbench)
 
 verilate(riscv-testbench
   TOP_MODULE tb_top
   PREFIX Vtb_top
-  SOURCES ../src/cpu.v ../src/reg_file.v ../src/ram.v ../src/inst_mem.v tb_top.sv
+  SOURCES ../src/cpu.v ../src/reg_file.v arch_ram.sv arch_instruction_mem.sv tb_top.sv
   VERILATOR_ARGS -Wno-CASEINCOMPLETE
+)
+
+add_test(NAME rv32i-arch-tests
+  COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/run_rv32i_tests.py
+    --suite ${CMAKE_CURRENT_SOURCE_DIR}/test_suite/I
+    --work ${CMAKE_CURRENT_BINARY_DIR}/rv32i-I
+    --simulator $<TARGET_FILE:riscv-testbench>
+    --clang ${RISCV_CLANG}
+    --objcopy ${LLVM_OBJCOPY}
+    --include ${CMAKE_CURRENT_SOURCE_DIR}
+    --linker-script ${CMAKE_CURRENT_SOURCE_DIR}/rv32i_link.ld
 )

@@ -1,4 +1,10 @@
 #include <imem.hpp>
+#include <algorithm>
+
+void imem::load_image(const std::vector<std::uint8_t>& image){
+  IMEM.fill(0);
+  std::copy_n(image.begin(), std::min(image.size(), IMEM.size()), IMEM.begin());
+}
 
 std::uint32_t imem::fetch(std::uint32_t pc){
   std::uint32_t byte0 = IMEM[pc];

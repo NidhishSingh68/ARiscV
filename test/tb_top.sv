@@ -3,6 +3,7 @@ module tb_top(
   input wire rst,
   output wire [31:0] pc,
   output wire retire,
+  output wire test_done,
   output wire [31:0] registers [0:31]
 );
   wire rdstrb;
@@ -36,7 +37,7 @@ module tb_top(
 
   instruction_mem i_mem(
     .clk(clk),
-    .address(pc[13:0]),
+    .address(pc),
     .rdstrb(rdstrb),
     .instruction(instruction),
     .dv(dv)
@@ -56,6 +57,7 @@ module tb_top(
   );
 
   assign retire = cpu.curr_state == 3'd4;
+  assign test_done = retire && cpu.localinst == 32'h00000073;
   genvar index;
   generate
     for (index = 0; index < 32; index = index + 1) begin : register_outputs

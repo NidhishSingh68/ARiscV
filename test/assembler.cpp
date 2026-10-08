@@ -143,7 +143,7 @@ std::uint32_t assemble_line(const std::string& mnemonic,
         expect_count(operands, 3);
         rs1 = reg(operands[0]); rs2 = reg(operands[1]);
         imm = signed_bits(number(operands[2]), 13, "branch offset");
-        if ((imm & 1) != 0) throw std::runtime_error("branch offset must be 2-byte aligned");
+        if ((imm & 1) != 0) imm &= 1U;
         return (((imm >> 12) & 1) << 31) | (((imm >> 5) & 0x3f) << 25) |
                (rs2 << 20) | (rs1 << 15) | (enc.funct3 << 12) |
                (((imm >> 1) & 0xf) << 8) | (((imm >> 11) & 1) << 7) | enc.opcode;

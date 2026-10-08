@@ -181,7 +181,7 @@ void JALR::execute(ram& program_ram, cpu_state& cpu_state){
   std::uint32_t rs1_val = cpu_state.register_file[rs1];
   
   if (rd != 0) cpu_state.register_file[rd] = cpu_state.pc + 4;
-  cpu_state.pc = cpu_state.register_file[rs1] + (imm & ~1);
+  cpu_state.pc = (rs1_val + imm) & ~std::uint32_t{1};
 }
 
 void LB::execute(ram& program_ram, cpu_state& cpu_state){
@@ -254,7 +254,7 @@ void SH::execute(ram& program_ram, cpu_state& cpu_state){
   std::uint32_t addr = rs1_val + imm;
   std::uint16_t write_val = rs2_val;
 
-  program_ram.write_uint8(addr,write_val);
+  program_ram.write_uint16(addr,write_val);
   cpu_state.pc = cpu_state.pc + 4;
 }
 
@@ -266,7 +266,7 @@ void SW::execute(ram& program_ram, cpu_state& cpu_state){
   std::uint32_t addr = rs1_val + imm;
   std::uint32_t write_val = rs2_val;
 
-  program_ram.write_uint8(addr,write_val);
+  program_ram.write_uint32(addr,write_val);
   cpu_state.pc = cpu_state.pc + 4;
 }
 

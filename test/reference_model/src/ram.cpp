@@ -28,10 +28,8 @@ std::uint32_t ram::read_int8(std::uint32_t addr){
 }
 
 std::uint32_t ram::read_int16(std::uint32_t addr){
-  std::int32_t byte0 = (std::int8_t)RAM[addr];
-  std::int32_t byte1 = (std::int8_t)RAM[addr+1];
-  std::uint32_t half_word = (byte1 << 8) | byte0;
-  return half_word;
+  const std::uint32_t half_word = read_uint16(addr);
+  return (half_word & 0x8000U) ? (half_word | 0xFFFF0000U) : half_word;
 }
 
 void ram::write_uint8(std::uint32_t addr, std::uint8_t value){

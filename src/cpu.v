@@ -90,13 +90,15 @@ wire is_branch = (opcode == 'b1100011);
 wire is_load = (opcode == 'b0000011);
 wire is_store = (opcode == 'b0100011);
 
-wire regfile_wb = ( alu_reg | alu_imm | is_jalr | is_lui | is_auipc | is_load );
+wire regfile_wb = ( alu_reg | alu_imm | is_jal | is_jalr | is_lui | is_auipc | is_load );
 
 wire is_mem_op = (is_load || is_store);
 
 wire reg_write = (curr_state == INSTRUCTION_WB) && regfile_wb;
 // Write back data which is the input to the Register File
-wire [31:0] write_data = ( (is_jal || is_jalr) ? logical_next_inst_address : (is_auipc ? alupc_res : (is_lui ? u_imm : alu_out)));
+wire [31:0] write_data = ( (is_jal || is_jalr) ? logical_next_inst_address :
+                          (is_load ? mem_read_val :
+                          (is_auipc ? alupc_res : (is_lui ? u_imm : alu_out))));
 
 wire [31:0] ors1;
 wire [31:0] ors2;
@@ -137,10 +139,9 @@ end
 wire [32:0] srl_sra_out = $signed({(func7[5] & alu_inp1[31]),alu_inp1}) >>> alu_inp2[4:0];
 
 // Execute Stage
-// TODO: Not every alu function has been tested
 always @(*) begin
   case (func3)
-    'b000: alu_out = ( func7[5] ? extended_alu_minus[31:0] : alu_inp1 + alu_inp2 ); // Add & Sub
+    'b000: alu_out = (alu_reg && func7[5] ? extended_alu_minus[31:0] : alu_inp1 + alu_inp2); // Add & Sub
     'b001: alu_out = (alu_inp1 << alu_inp2[4:0]);
     'b010: alu_out = ($signed(alu_inp1) < $signed(alu_inp2) ? 32'b1 : 32'b0); // Slt
     'b011: alu_out = (extended_alu_minus[32] ? 32'b1 : 32'b0); // Sltu
@@ -202,7 +203,6 @@ end
 
 // Write Back Stage
 reg takebranch;
-// TODO: Not every branch condition has been tested
 always @(*) begin
   case (func3)
     'b000: takebranch = is_zero;
@@ -215,7 +215,9 @@ always @(*) begin
   endcase
 end
 
-wire [31:0] next_pc = ((is_branch && takebranch) ? pc+b_imm : (is_jal ? pc+j_imm : (is_jalr ? pc+i_imm : logical_next_inst_address)));
+wire [31:0] next_pc = ((is_branch && takebranch) ? pc+b_imm :
+                       (is_jal ? pc+j_imm :
+                       (is_jalr ? ((rs1_value+i_imm) & 32'hffff_fffe) : logical_next_inst_address)));
 always @(posedge clk or negedge rst) begin
   if (!rst) begin
     pc <= 32'b0;

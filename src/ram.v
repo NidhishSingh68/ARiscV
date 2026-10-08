@@ -29,10 +29,10 @@ reg [1:0] curr_state = IDLE;
 reg [1:0] mem_tx = 0; // Number of memory read/write tx that should happen (LW/SW: 4, LH/SH: 2, LB/SB: 1)
 reg [1:0] cnt = 0; // Keeps track of tx that have happened
 wire [7:0] byte_write_chunks[3:0];
-assign byte_write_chunks[0] = write_val[31:24];
-assign byte_write_chunks[1] = write_val[23:16];
-assign byte_write_chunks[2] = write_val[15:8];
-assign byte_write_chunks[3] = write_val[7:0];
+assign byte_write_chunks[0] = write_val[7:0];
+assign byte_write_chunks[1] = write_val[15:8];
+assign byte_write_chunks[2] = write_val[23:16];
+assign byte_write_chunks[3] = write_val[31:24]; 
 
 reg [7:0] read_data[3:0];
 

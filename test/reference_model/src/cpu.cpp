@@ -15,6 +15,10 @@ std::uint32_t cpu::fetch(){
 
 void cpu::run(std::uint32_t inst_word){
   std::uint8_t opcode = inst_word & 0x0000007F;
+  if (opcode == 0x0F) {
+    state.pc += 4;
+    return;
+  }
   OPCODE_T inst_opcode = static_cast<OPCODE_T>(opcode);
   std::unique_ptr<instruction> inst;
 

@@ -58,6 +58,7 @@ std::unique_ptr<instruction> get_branch(std::uint32_t instruction){
   std::uint32_t imm12 = ((std::int32_t)instruction >> B_TYPE_IMM_12) & 1U;
 
   imm = ((imm12 << 12) | (imm11 << 11) | (imm10_5 << 5) | (imm4_1 << 1));
+  if (imm12 != 0) imm |= 0xFFFFE000;
   std::unique_ptr<btype> inst = nullptr;
 
   if (func3 == 0) {
@@ -115,6 +116,7 @@ std::unique_ptr<instruction> get_store(std::uint32_t instruction){
   std::uint32_t imm11_5 = ((std::int32_t)instruction >> S_TYPE_IMM_11_5_SHAMT) & 0x7F;
 
   std::uint32_t imm = (imm11_5 << 5) | (imm4_0);
+  if ((imm & 0x800) != 0) imm |= 0xFFFFF000;
 
   std::unique_ptr<stype> inst = nullptr;
 
@@ -182,8 +184,10 @@ std::unique_ptr<instruction> get_rtype(std::uint32_t instruction){
 
   std::unique_ptr<rtype> inst = nullptr;
 
-  if (func3 == 0) {
+  if (func3 == 0 && func7 == 0) {
     inst = std::make_unique<ADD>();
+  } else if (func3 == 0 && func7 == 0x08) {
+    inst = std::make_unique<SUB>();
   } else if (func3 == 2){
     inst = std::make_unique<SLT>();
   } else if (func3 == 3) {
