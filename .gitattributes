@@ -1,1 +1,1 @@
-test/test_suite/I/*.asm linguist-generated=true
+test/test_suite/I/*.S linguist-generated=true
