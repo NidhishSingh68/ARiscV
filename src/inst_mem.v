@@ -9,11 +9,12 @@ module instruction_mem (
 
 reg oce,ce,reset,wre;
 reg [7:0] din;
-wire [7:0] data;
+reg [7:0] data;
 reg [13:0] internal_addr = 0;
 
+// IP Core generated in bypass mode
 `ifndef VERILATOR
-Gowin_SP instruction_ram(
+Gowin_SP_Imem instruction_ram(
     .dout(data), //output [7:0] dout
     .clk(clk), //input clk
     .oce(oce), //input oce
@@ -25,12 +26,40 @@ Gowin_SP instruction_ram(
 );
 `else 
   reg [7:0] MEM[16384];
-  reg [7:0] local_read;
-  assign data = local_read;
 
-  always @(posedge clk) begin
-    if (ce & oce) local_read <= MEM[internal_addr];
+  always @(*) begin
+    if (ce && oce) begin
+      data = MEM[internal_addr];
+    end else data = 'b0;
   end
+
+initial begin
+  integer fd;
+  integer i;
+  reg [31:0] instruction;
+  fd = $fopen("instructions.txt", "r");
+
+  if (fd == 0) begin
+    $display("ERROR: Could not open instructions.txt");
+    $finish;
+  end
+
+  i = 0;
+
+  while (!$feof(fd)) begin
+    if ($fscanf(fd, "%h\n", instruction) == 1) begin
+      MEM[i + 0] = instruction[7:0];
+      MEM[i + 1] = instruction[15:8];
+      MEM[i + 2] = instruction[23:16];
+      MEM[i + 3] = instruction[31:24];
+
+      i = i + 4;
+    end
+  end
+
+  $fclose(fd);
+end
+
 `endif
 
 // TODO: Remove the start state, we never enter it

@@ -6,3 +6,4 @@ test/*.fst
 src/gowin_sp/*
 src/ram_test.sdc
 ./ram_test.gprj
+test/build

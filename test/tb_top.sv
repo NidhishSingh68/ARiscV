@@ -1,38 +1,69 @@
-`timescale 1ns/1ns
+module tb_top(
+  input wire clk,
+  input wire rst,
+  output wire [31:0] pc,
+  output wire retire,
+  output wire [31:0] registers [0:31]
+);
+  wire rdstrb;
+  wire [31:0] instruction;
+  wire dv;
+  wire [31:0] address;
+  wire [3:0] mask;
+  wire sext;
+  wire [31:0] write_val;
+  wire rdwr;
+  wire start;
+  wire [31:0] read_val;
+  wire ram_op_done;
 
-module tb;
+  cpu cpu(
+    .clk(clk),
+    .rst(rst),
+    .pc(pc),
+    .rdstrb(rdstrb),
+    .instruction(instruction),
+    .dv(dv),
+    .address(address),
+    .mask(mask),
+    .sext(sext),
+    .write_val(write_val),
+    .rdwr(rdwr),
+    .start(start),
+    .read_val(read_val),
+    .ram_op_done(ram_op_done)
+  );
 
-    reg clk;
-    reg uart_rx, uart_tx;
-    reg rst;
+  instruction_mem i_mem(
+    .clk(clk),
+    .address(pc[13:0]),
+    .rdstrb(rdstrb),
+    .instruction(instruction),
+    .dv(dv)
+  );
 
-    top dut (
-        .clk(clk),
-        .rst(rst),
-        .uart_rx(uart_rx),
-        .uart_tx(uart_tx)
-    );
+  ram data_mem(
+    .clk(clk),
+    .rst(rst),
+    .address(address),
+    .mask(mask),
+    .sext(sext),
+    .write_val(write_val),
+    .rdwr(rdwr),
+    .start(start),
+    .read_val(read_val),
+    .done(ram_op_done)
+  );
 
-    initial begin
-        $dumpfile("wave.vcd");
-        $dumpvars(0, tb);
+  assign retire = cpu.curr_state == 3'd4;
+  genvar index;
+  generate
+    for (index = 0; index < 32; index = index + 1) begin : register_outputs
+      if (index == 0) begin
+        assign registers[index] = 32'b0;
+      end else begin
+        assign registers[index] = cpu.register_file.rF[index];
+      end
     end
-
-    initial begin
-        clk = 0;
-        forever #10 clk = ~clk;
-    end
-
-    initial begin
-        rst = 'b0;
-        #1000
-        rst = 'b1;
-        #100
-        rst = 'b0;
-        #200000
-        
-        $display("Yo can you believe we are done???!!!");
-        $finish;
-    end
-
+  endgenerate
 endmodule
