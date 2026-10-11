@@ -10,6 +10,7 @@ find_package(verilator REQUIRED)
 find_package(Python3 REQUIRED COMPONENTS Interpreter)
 find_program(RISCV_CLANG clang REQUIRED)
 find_program(LLVM_OBJCOPY llvm-objcopy REQUIRED)
+message(STATUS "Program location: ${RISCV_CLANG}")
 
 add_executable(rv32-assembler assembler.cpp)
 
@@ -26,7 +27,7 @@ target_include_directories(riscv-testbench PRIVATE reference_model/includes)
 verilate(riscv-testbench
   TOP_MODULE tb_top
   PREFIX Vtb_top
-  SOURCES ../src/cpu.v ../src/reg_file.v arch_ram.sv arch_instruction_mem.sv tb_top.sv
+  SOURCES ../src/cpu.v ../src/reg_file.v ../src/inst_mem.v ../src/ram.v tb_top.sv
   VERILATOR_ARGS -Wno-CASEINCOMPLETE
 )
 

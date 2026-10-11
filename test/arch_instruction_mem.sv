@@ -5,7 +5,7 @@ module instruction_mem (
   output reg [31:0] instruction,
   output reg dv
 );
-  reg [7:0] memory [0:1048575];
+  reg [7:0] memory [102399:0]; // 100kb
   reg pending = 1'b0;
 
   initial begin

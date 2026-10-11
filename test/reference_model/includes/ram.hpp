@@ -11,6 +11,7 @@ class ram{
     std::array<std::uint8_t,RAM_SIZE> RAM; 
 
   public:
+    ram();
     std::uint32_t read_uint8(std::uint32_t addr);
     std::uint32_t read_uint16(std::uint32_t addr);
     std::uint32_t read_uint32(std::uint32_t addr);

@@ -53,7 +53,7 @@ Gowin_SP_ram ram(
     .din(din) //input [7:0] din
 );
 `else 
-reg [7:0] MEM[98304];
+  reg [7:0] MEM[102399:0]; // 100Kb
 
 // Bypass Reads
 assign dout = MEM[internal_address];
@@ -64,8 +64,12 @@ always @(posedge clk) begin
     MEM[internal_address[16:0]] <= byte_write_chunks[cnt];
   end
 end
-`endif
 
+initial begin
+  $readmemh("memory.hex", MEM);
+end
+
+`endif
 
 // Output generation block
 always @(*) begin

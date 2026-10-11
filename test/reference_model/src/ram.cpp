@@ -1,5 +1,9 @@
 #include <ram.hpp>
 
+ram::ram(){
+  RAM.fill(0);
+}
+
 std::uint32_t ram::read_uint8(std::uint32_t addr){
   std::uint32_t byte0 = RAM[addr];
   return byte0;

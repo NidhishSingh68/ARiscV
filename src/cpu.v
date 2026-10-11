@@ -3,10 +3,10 @@ module cpu (
   input rst,
   
   // Instruction Mem Interface
-  output reg[31:0] pc,
-  output reg rdstrb,
-  input reg [31:0] instruction,
-  input reg dv,
+  output reg [31:0] pc,
+  output rdstrb,
+  input [31:0] instruction,
+  input dv,
 
   // Ram Interface
   output [31:0] address,
@@ -183,6 +183,10 @@ always @(*) begin
       mask = 4'b0011;
       sext = 1'b0;
     end
+    default: begin
+      mask = 4'b0000;
+      sext = 1'b0;
+    end
   endcase
 end
 
@@ -215,7 +219,7 @@ always @(*) begin
   endcase
 end
 
-wire [31:0] next_pc = ((is_branch && takebranch) ? pc+b_imm :
+wire [31:0] next_pc =  ((is_branch && takebranch) ? pc+b_imm :
                        (is_jal ? pc+j_imm :
                        (is_jalr ? ((rs1_value+i_imm) & 32'hffff_fffe) : logical_next_inst_address)));
 always @(posedge clk or negedge rst) begin

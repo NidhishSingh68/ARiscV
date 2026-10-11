@@ -49,9 +49,10 @@ int main(int argc, char** argv) {
     top.eval();
     top.rst = 1;
 
-    std::size_t retired = 0;
+    std::size_t inst_count = 1;
     const std::size_t max_cycles = image.size() * 100 + 10000;
     bool completed = false;
+    auto before = reference.get_state();
     for (std::size_t cycle = 0; cycle < max_cycles; ++cycle) {
         top.clk = 0;
         top.eval();
@@ -69,7 +70,6 @@ int main(int argc, char** argv) {
             break;
         }
 
-        const auto& before = reference.get_state();
         if ((before.pc & 3U) != 0 || before.pc + 4 > image.size()) {
             std::cerr << "Reference PC is outside the memory image: 0x"
                       << std::hex << before.pc << '\n';
@@ -78,7 +78,7 @@ int main(int argc, char** argv) {
         reference.run(instruction_mem.fetch(before.pc));
         const auto& expected = reference.get_state();
         if (top.pc != expected.pc) {
-            std::cerr << "PC mismatch after instruction " << std::dec << retired
+            std::cerr << "PC mismatch at instruction " << std::dec << inst_count 
                       << ": RTL=0x" << std::hex << top.pc
                       << " reference=0x" << expected.pc << '\n';
             return 1;
@@ -86,7 +86,7 @@ int main(int argc, char** argv) {
         for (std::size_t index = 0; index < expected.register_file.size(); ++index) {
             if (top.registers[index] != expected.register_file[index]) {
                 std::cerr << "Register x" << std::dec << index
-                          << " mismatch after instruction " << retired
+                          << " mismatch at instruction " << inst_count 
                           << " at PC 0x" << std::hex << before.pc
                           << " (instruction 0x" << instruction_mem.fetch(before.pc) << ")"
                           << ": RTL=0x" << std::hex << top.registers[index]
@@ -94,14 +94,15 @@ int main(int argc, char** argv) {
                 return 1;
             }
         }
-        ++retired;
+        ++inst_count;
+        before = reference.get_state();
     }
 
     if (!completed) {
-        std::cerr << "Timed out after retiring " << retired << " instructions\n";
+        std::cerr << "Timed out after retiring " << inst_count << " instructions\n";
         return 1;
     }
 
-    std::cout << "Passed after comparing " << retired << " instructions\n";
+    std::cout << "Passed after comparing " << inst_count << " instructions\n";
     return 0;
 }

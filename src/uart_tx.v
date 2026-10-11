@@ -118,7 +118,7 @@ module uart_tx
               curr_cycle <= 0;
             end else
               curr_cycle <= curr_cycle + 1'b1;
-            end
+          end
         end
         STOP_BIT: begin
           if (curr_cycle == CYCLES_PER_BIT - 1'b1) curr_cycle <= 0;

@@ -61,11 +61,7 @@ module tb_top(
   genvar index;
   generate
     for (index = 0; index < 32; index = index + 1) begin : register_outputs
-      if (index == 0) begin
-        assign registers[index] = 32'b0;
-      end else begin
-        assign registers[index] = cpu.register_file.rF[index];
-      end
+      assign registers[index] = cpu.register_file.rF[index];
     end
   endgenerate
 endmodule
