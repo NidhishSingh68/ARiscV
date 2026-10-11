@@ -28,6 +28,7 @@ def main() -> int:
     elf = output_dir / "a.elf"
     binary = output_dir / "a.bin"
     memory = Path("../memory/memory.mi")
+    memory.parent.mkdir(parents=True, exist_ok=True)
 
     try:
         subprocess.run(
