@@ -91,7 +91,7 @@ end
 always @(*) begin
   dv = 'b0;
   if (curr_state == OUTPUT) begin
-    dv <= 1'b1;
+    dv = 1'b1;
   end
 end
 

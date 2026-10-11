@@ -8,6 +8,6 @@ src/ram_test.sdc
 ./ram_test.gprj
 test/build
 test/compile_commands.json
-./memory/
+memory/
 *.bin
 *.elf

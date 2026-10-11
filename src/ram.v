@@ -42,19 +42,9 @@ reg [31:0] internal_address;
 `else 
   reg [7:0] MEM[102399:0]; // 100Kb
 
-// Bypass Reads
-assign dout = MEM[internal_address];
-
-// Write model
-always @(posedge clk) begin
-  if (ce && wre) begin
-    MEM[internal_address[16:0]] <= byte_write_chunks[cnt];
+  initial begin
+    $readmemh("memory.hex", MEM);
   end
-end
-
-initial begin
-  $readmemh("memory.hex", MEM);
-end
 
 `endif
 

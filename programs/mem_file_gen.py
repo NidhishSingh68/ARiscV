@@ -38,7 +38,6 @@ def main() -> int:
                 "-mabi=ilp32",
                 "-nostdlib",
                 "-fuse-ld=lld",
-                "-O3",
                 "-T", linker_script,
                 *map(str, sources),
                 "-o", str(elf),
