@@ -35,23 +35,10 @@ assign byte_write_chunks[2] = write_val[23:16];
 assign byte_write_chunks[3] = write_val[31:24]; 
 
 reg [7:0] read_data[3:0];
-
-reg oce,ce,reset,wre;
-reg [7:0] din;
-wire [7:0] dout;
 reg [31:0] internal_address;
 
 `ifndef VERILATOR
-Gowin_SP_ram ram(
-    .dout(dout), //output [7:0] dout
-    .clk(clk), //input clk
-    .oce(oce), //input oce
-    .ce(ce), //input ce
-    .reset(reset), //input reset
-    .wre(wre), //input wre
-    .ad(internal_address[16:0]), //input [16:0] ad
-    .din(din) //input [7:0] din
-);
+  reg [7:0] MEM[98303:0] /* synthesis syn_ramstyle="block_ram" */;
 `else 
   reg [7:0] MEM[102399:0]; // 100Kb
 
@@ -89,32 +76,8 @@ end
 
 // Memory controller
 always @(*) begin
-  reset = 1'b0;
-  done = 1'b0;
-  wre = 1'b0;
-  din = 8'b0;
-  oce = 1'b0;
-  ce = 1'b0;
-  case (curr_state)
-    IDLE: begin
-      oce = 1'b0;
-      ce = 1'b0;
-    end
-    WAIT: begin
-      ce = 1'b1;
-      oce = 1'b1; 
-      if (rdwr) begin
-        wre = 1'b1;
-        oce = 1'b0;
-        din = byte_write_chunks[cnt];
-      end
-    end
-    DONE: begin
-      oce = 1'b0;
-      ce = 1'b0;
-      done = 1'b1;
-    end
-  endcase
+  if (curr_state == DONE) done = 1'b1;
+  else done = 1'b0;
 end
 
 // Only perform read or writes in WAIT state
@@ -160,13 +123,15 @@ always @(posedge clk or negedge rst) begin
         cnt <= cnt + 1'b1;
         if (!rdwr) begin
           // LOADS
-          read_data[cnt] <= dout; // Assume BSRAM instantiated in bypass mode
+          read_data[cnt] <= MEM[internal_address]; // Assume BSRAM instantiated in bypass mode
           if (cnt != mem_tx) curr_state <= WAIT;
           else curr_state <= DONE;
         end else begin
           // STORES
-          if (mem_tx != cnt) curr_state <= WAIT;
-          else curr_state <= DONE;
+          if (mem_tx != cnt) begin 
+            curr_state <= WAIT;
+            MEM[internal_address] <= byte_write_chunks[cnt];
+          end else curr_state <= DONE;
         end
       end
       DONE: begin

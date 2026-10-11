@@ -5,6 +5,8 @@ MEMORY
   FLASH    (rx)    : ORIGIN = 0x00000000,   LENGTH = 16K
 }
 
+_RAM_SIZE = ORIGIN(RAM) + LENGTH(RAM);
+
 SECTIONS
 {
   . = 0;
@@ -19,3 +21,4 @@ SECTIONS
   .data : { *(.data*) *(.rodata*) } >RAM
   .bss : { *(.bss*) *(COMMON) } >RAM
 }
+

@@ -14,16 +14,22 @@ reg [31:0] internal_addr = 0;
 
 // IP Core generated in bypass mode
 `ifndef VERILATOR
- Gowin_SP_Imem instruction_ram(
-     .dout(data), //output [7:0] dout
-     .clk(clk), //input clk
-     .oce(oce), //input oce
-     .ce(ce), //input ce
-     .reset(reset), //input reset
-     .wre(wre), //input wre
-     .ad(internal_addr[13:0]), //input [13:0] ad
-     .din(din) //input [31:0] din
- );
+ // Gowin_SP_Imem instruction_ram(
+     // .dout(data), //output [7:0] dout
+     // .clk(clk), //input clk
+     // .oce(oce), //input oce
+     // .ce(ce), //input ce
+     // .reset(reset), //input reset
+     // .wre(wre), //input wre
+     // .ad(internal_addr[13:0]), //input [13:0] ad
+     // .din(din) //input [31:0] din
+ // );
+ 
+  reg [7:0] MEM[16384:0] /* synthesis syn_ramstyle="block_ram" */;
+
+  initial begin
+    $readmemh("../memory/memory.mi", MEM);
+  end
 
 `else 
   reg [7:0] MEM[102399:0]; // 100Kb
@@ -66,7 +72,7 @@ always @(posedge clk) begin
       curr_state <= WAIT;
     end
     WAIT: begin
-      instruction_bytes[cnt] <= data;
+      instruction_bytes[cnt] <= MEM[internal_addr];
       if (cnt == 3) begin
         curr_state <= OUTPUT;
         cnt <= 2'b0;
@@ -82,38 +88,11 @@ always @(posedge clk) begin
   endcase
 end
 
-// Generate output and dram signals 
 always @(*) begin
-  reset = 'b0;
-  wre = 'b0;
-  oce = 'b0;
-  ce = 'b0;
   dv = 'b0;
-  case (curr_state)
-    IDLE: begin
-      oce = 'b0;
-      ce = 'b0;
-    end
-    START: begin
-      oce = 'b1;
-      ce = 'b1;
-    end
-    WAIT: begin
-      oce = 'b1;
-      ce = 'b1;
-      dv = 'b0;
-    end
-    OUTPUT: begin
-      oce = 'b0;
-      ce = 'b0;
-      dv = 'b1;
-    end
-    default: begin
-      oce = 'b0;
-      ce = 'b0;
-      dv = 'b0;
-    end
-  endcase
+  if (curr_state == OUTPUT) begin
+    dv <= 1'b1;
+  end
 end
 
 endmodule

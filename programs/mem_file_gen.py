@@ -12,8 +12,7 @@ def run(command: list[str], cwd: pathlib.Path | None = None) -> None:
 
 
 def write_hex(binary: pathlib.Path, target: pathlib.Path) -> None:
-    with target.open("a") as f:
-        f.write("".join(f"{byte:02x}\n" for byte in binary.read_bytes()))
+        target.write_text("".join(f"{byte:02x}\n" for byte in binary.read_bytes()))
 
 def main() -> int:
     parser = argparse.ArgumentParser()
@@ -39,6 +38,7 @@ def main() -> int:
                 "-mabi=ilp32",
                 "-nostdlib",
                 "-fuse-ld=lld",
+                "-O3",
                 "-T", linker_script,
                 *map(str, sources),
                 "-o", str(elf),
@@ -50,12 +50,6 @@ def main() -> int:
             [args.objcopy, "-O", "binary", str(elf), str(binary)],
             check=True,
         )
-        memory.write_text(textwrap.dedent("""\
-            #File_format=Hex
-            #Address_depth=16384
-            #Data_width=8
-        """))
-
         write_hex(binary, memory)
 
     except subprocess.CalledProcessError as error:

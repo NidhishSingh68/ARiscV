@@ -63,7 +63,7 @@ instruction_mem imem(
 
 always @(posedge clk) begin
   if (ram_address[17] && rdwr) begin
-    led_reg <= 1'b1;
+    led_reg <= write_val[0];
     periph_write_done <= 1'b1;
   end else periph_write_done <= 1'b0;
 end
